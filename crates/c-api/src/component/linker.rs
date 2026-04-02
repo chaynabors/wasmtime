@@ -172,7 +172,7 @@ pub unsafe extern "C" fn wasmtime_component_linker_add_wasip2(
 pub unsafe extern "C" fn wasmtime_component_linker_add_wasi_http(
     linker: &mut wasmtime_component_linker_t,
 ) -> Option<Box<wasmtime_error_t>> {
-    let result = wasmtime_wasi_http::add_only_http_to_linker_sync(&mut linker.linker);
+    let result = wasmtime_wasi_http::p2::add_only_http_to_linker_sync(&mut linker.linker);
     crate::handle_result(result, |_| ())
 }
 

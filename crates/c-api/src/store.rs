@@ -107,13 +107,16 @@ impl wasmtime_wasi::WasiView for WasmtimeStoreData {
 }
 
 #[cfg(all(feature = "component-model", feature = "wasi-http"))]
-impl wasmtime_wasi_http::WasiHttpView for WasmtimeStoreData {
-    fn ctx(&mut self) -> &mut wasmtime_wasi_http::WasiHttpCtx {
-        self.wasi_http.as_mut().unwrap()
-    }
-    
-    fn table(&mut self) -> &mut wasmtime::component::ResourceTable {
-        wasmtime_wasi::WasiView::ctx(self).table
+impl wasmtime_wasi_http::p2::WasiHttpView for WasmtimeStoreData {
+    fn http(&mut self) -> wasmtime_wasi_http::p2::WasiHttpCtxView<'_> {
+        use wasmtime_wasi::WasiView;
+        let ctx = self.wasi_http.as_mut().unwrap();
+        let table = self.wasi.as_mut().unwrap().ctx().table;
+        wasmtime_wasi_http::p2::WasiHttpCtxView {
+            ctx,
+            table,
+            hooks: wasmtime_wasi_http::p2::default_hooks(),
+        }
     }
 }
 
@@ -237,6 +240,14 @@ pub extern "C" fn wasmtime_context_set_wasi(
     crate::handle_result(wasi.into_wasi_ctx(), |wasi| {
         context.data_mut().wasi = Some(wasi);
     })
+}
+
+#[cfg(feature = "wasi-http")]
+#[unsafe(no_mangle)]
+pub extern "C" fn wasmtime_context_set_wasi_http(
+    mut context: WasmtimeStoreContextMut<'_>,
+) {
+    context.data_mut().wasi_http = Some(wasmtime_wasi_http::WasiHttpCtx::new());
 }
 
 #[unsafe(no_mangle)]
